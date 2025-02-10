@@ -8,6 +8,7 @@ from datetime import datetime
 from pathlib import Path
 
 import click
+from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 
 from hercules.blueprints.autoridades.models import Autoridad
 from hercules.blueprints.oficinas.models import Oficina
@@ -28,12 +29,38 @@ def alimentar_usuarios():
     if not ruta.is_file():
         click.echo(f"AVISO: {ruta.name} no es un archivo.")
         sys.exit(1)
+    try:
+        autoridad_nd = Autoridad.query.filter_by(clave="ND").one()
+        oficina_nd = Oficina.query.filter_by(clave="ND").one()
+    except (MultipleResultsFound, NoResultFound):
+        click.echo("AVISO: No se encontró la autoridad y/o oficina 'ND'.")
+        sys.exit(1)
     click.echo("Alimentando usuarios: ", nl=False)
     contador = 0
     with open(ruta, encoding="utf8") as puntero:
         rows = csv.DictReader(puntero)
         for row in rows:
+            # Si usuario_id NO es consecutivo, se inserta un usuario "NO EXISTE"
+            contador += 1
             usuario_id = int(row["usuario_id"])
+            if usuario_id != contador:
+                Usuario(
+                    autoridad_id=autoridad_nd.id,
+                    oficina_id=oficina_nd.id,
+                    email=f"no-existe-{contador}@server.com",
+                    nombres="NO EXISTE",
+                    apellido_paterno="",
+                    apellido_materno="",
+                    curp="",
+                    puesto="",
+                    workspace="EXTERNO",
+                    estatus="B",
+                    api_key="",
+                    api_key_expiracion=datetime(year=2000, month=1, day=1),
+                    contrasena=pwd_context.hash(generar_contrasena()),
+                ).save()
+                click.echo(click.style("!", fg="yellow"), nl=False)
+                continue
             autoridad_clave = safe_clave(row["autoridad_clave"])
             oficina_id = int(row["oficina_id"])
             email = safe_email(row["email"])
@@ -44,9 +71,6 @@ def alimentar_usuarios():
             puesto = safe_string(row["puesto"], save_enie=True)
             workspace = safe_string(row["workspace"])
             estatus = row["estatus"]
-            # if usuario_id != contador + 1:
-            #     click.echo(click.style(f"  AVISO: usuario_id {usuario_id} no es consecutivo", fg="red"))
-            #     sys.exit(1)
             autoridad = Autoridad.query.filter_by(clave=autoridad_clave).first()
             if autoridad is None:
                 click.echo(click.style(f"  AVISO: autoridad_clave {autoridad_clave} no existe", fg="red"))
@@ -70,7 +94,6 @@ def alimentar_usuarios():
                 api_key_expiracion=datetime(year=2000, month=1, day=1),
                 contrasena=pwd_context.hash(generar_contrasena()),
             ).save()
-            contador += 1
             click.echo(click.style(".", fg="green"), nl=False)
     click.echo()
     click.echo(click.style(f"  {contador} usuarios alimentados.", fg="green"))

@@ -9,6 +9,7 @@ from flask_login import current_user, login_required
 
 from hercules.blueprints.bitacoras.models import Bitacora
 from hercules.blueprints.modulos.models import Modulo
+from hercules.blueprints.pen_jueces.forms import PenJuezForm
 from hercules.blueprints.pen_jueces.models import PenJuez
 from hercules.blueprints.permisos.models import Permiso
 from hercules.blueprints.usuarios.decorators import permission_required
@@ -91,3 +92,81 @@ def detail(pen_juez_id):
     """Detalle de un Juez"""
     pen_juez = PenJuez.query.get_or_404(pen_juez_id)
     return render_template("pen_jueces/detail.jinja2", pen_juez=pen_juez)
+
+
+@pen_jueces.route("/pen_jueces/nuevo", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.CREAR)
+def new():
+    """Nuevo Juez"""
+    form = PenJuezForm()
+    if form.validate_on_submit():
+        pen_juez = PenJuez(nombre=safe_string(form.nombre.data, save_enie=True))
+        pen_juez.save()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Nuevo Juez {pen_juez.nombre}"),
+            url=url_for("pen_jueces.detail", pen_juez_id=pen_juez.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(bitacora.url)
+    return render_template("pen_jueces/new.jinja2", form=form)
+
+
+@pen_jueces.route("/pen_jueces/edicion/<int:pen_juez_id>", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.MODIFICAR)
+def edit(pen_juez_id):
+    """Editar Juez"""
+    pen_juez = PenJuez.query.get_or_404(pen_juez_id)
+    form = PenJuezForm()
+    if form.validate_on_submit():
+        pen_juez.nombre = safe_string(form.nombre.data, save_enie=True)
+        pen_juez.save()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Editado Juez {pen_juez.nombre}"),
+            url=url_for("pen_jueces.detail", pen_juez_id=pen_juez.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(bitacora.url)
+    form.nombre.data = pen_juez.nombre
+    return render_template("pen_jueces/edit.jinja2", form=form, pen_juez=pen_juez)
+
+
+@pen_jueces.route("/pen_jueces/eliminar/<int:pen_juez_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def delete(pen_juez_id):
+    """Eliminar Juez"""
+    pen_juez_id = PenJuez.query.get_or_404(pen_juez_id)
+    if pen_juez_id.estatus == "A":
+        pen_juez_id.delete()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Eliminado Modulo {pen_juez_id.nombre}"),
+            url=url_for("pen_jueces.detail", pen_juez_id_id=pen_juez_id.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("pen_jueces.detail", pen_juez_id=pen_juez_id.id))
+
+
+@pen_jueces.route("/pen_jueces/recuperar/<int:pen_juez_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def recover(pen_juez_id):
+    """Recuperar Juez"""
+    pen_juez = PenJuez.query.get_or_404(pen_juez_id)
+    if pen_juez.estatus == "B":
+        pen_juez.recover()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Recuperado Juez {pen_juez.nombre}"),
+            url=url_for("pen_jueces.detail", pen_juez_id=pen_juez.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("pen_jueces.detail", pen_juez_id=pen_juez.id))

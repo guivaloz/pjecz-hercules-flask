@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 import click
+from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 
 from hercules.blueprints.autoridades.models import Autoridad
 from hercules.blueprints.distritos.models import Distrito
@@ -26,12 +27,50 @@ def alimentar_autoridades():
     if not ruta.is_file():
         click.echo(f"AVISO: {ruta.name} no es un archivo.")
         sys.exit(1)
+    try:
+        distrito_nd = Distrito.query.filter_by(clave="ND").one()
+        materia_nd = Materia.query.filter_by(clave="ND").one()
+        municipio_nd = Municipio.query.filter_by(clave="ND").one()
+    except (MultipleResultsFound, NoResultFound):
+        click.echo("AVISO: No se encontró el distrito, materia y/o municipio 'ND'.")
+        sys.exit(1)
     click.echo("Alimentando autoridades: ", nl=False)
     contador = 0
     with open(ruta, encoding="utf8") as puntero:
         rows = csv.DictReader(puntero)
         for row in rows:
+            # Si autoridad_id NO es consecutivo, se inserta una autoridad "NO EXISTE"
+            contador += 1
             autoridad_id = int(row["autoridad_id"])
+            if autoridad_id != contador:
+                Autoridad(
+                    distrito_id=distrito_nd.id,
+                    materia_id=materia_nd.id,
+                    municipio_id=municipio_nd.id,
+                    clave=f"NE-{contador}",
+                    descripcion="NO EXISTE",
+                    descripcion_corta="NO EXISTE",
+                    es_archivo_solicitante=False,
+                    es_cemasc=False,
+                    es_defensoria=False,
+                    es_extinto=False,
+                    es_jurisdiccional=False,
+                    es_notaria=False,
+                    es_organo_especializado=False,
+                    es_revisor_escrituras=False,
+                    organo_jurisdiccional="NO DEFINIDO",
+                    directorio_edictos="",
+                    directorio_glosas="",
+                    directorio_listas_de_acuerdos="",
+                    directorio_sentencias="",
+                    audiencia_categoria="NO DEFINIDO",
+                    limite_dias_listas_de_acuerdos=0,
+                    datawarehouse_id=0,
+                    sede="ND",
+                    estatus="B",
+                ).save()
+                click.echo(click.style("!", fg="yellow"), nl=False)
+                continue
             distrito_id = int(row["distrito_id"])
             materia_id = int(row["materia_id"])
             municipio_id = int(row["municipio_id"])
@@ -59,9 +98,6 @@ def alimentar_autoridades():
                 datawarehouse_id = 0
             sede = row["sede"]
             estatus = row["estatus"]
-            if autoridad_id != contador + 1:
-                click.echo(click.style(f"  AVISO: autoridad_id {autoridad_id} no es consecutivo", fg="red"))
-                sys.exit(1)
             distrito = Distrito.query.get(distrito_id)
             if distrito is None:
                 click.echo(click.style(f"  AVISO: distrito_id {distrito_id} no existe", fg="red"))
@@ -100,7 +136,6 @@ def alimentar_autoridades():
                 sede=sede,
                 estatus=estatus,
             ).save()
-            contador += 1
             click.echo(click.style(".", fg="green"), nl=False)
     click.echo()
     click.echo(click.style(f"  {contador} autoridades alimentadas.", fg="green"))

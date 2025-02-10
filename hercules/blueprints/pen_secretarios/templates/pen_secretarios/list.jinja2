@@ -6,13 +6,25 @@
 
 {% block topbar_actions %}
     {% call topbar.page_buttons(titulo) %}
+        {% if current_user.can_view('PEN AGENTES MP') %}
+            {{ topbar.button('Agentes MP', url_for('pen_agentes_mp.list_active'),'mdi:account-circle') }}
+        {% endif %}
+        {% if current_user.can_view('PEN EXPEDIENTES') %}
+            {{ topbar.button('Expedientes', url_for('pen_expedientes.list_active'),'mdi:folder') }}
+        {% endif %}
+        {% if current_user.can_view('PEN INCULPADOS') %}
+            {{ topbar.button('Inculpados', url_for('pen_inculpados.list_active'),'mdi:account-card') }}
+        {% endif %}
+        {% if current_user.can_view('PEN JUECES') %}
+            {{ topbar.button('Jueces', url_for('pen_jueces.list_active'),'mdi:account-circle') }}
+        {% endif %}
         {% if current_user.can_admin('PEN SECRETARIOS') %}
             {% if estatus == 'A' %}{{ topbar.button_list_inactive('Inactivos', url_for('pen_secretarios.list_inactive')) }}{% endif %}
             {% if estatus == 'B' %}{{ topbar.button_list_active('Activos', url_for('pen_secretarios.list_active')) }}{% endif %}
         {% endif %}
-        {# if current_user.can_insert('PEN SECRETARIOS') %}
+        {% if current_user.can_insert('PEN SECRETARIOS') %}
             {{ topbar.button_new('Nuevo Secretario', url_for('pen_secretarios.new')) }}
-        {% endif #}
+        {% endif %}
     {% endcall %}
 {% endblock %}
 
@@ -69,7 +81,7 @@
         ];
         // Filtros pen_secretarios
         const filtrosPenSecretario = new FiltrosDataTable('#pen_secretarios_datatable', configDataTable);
-        filtrosPenAgentesMP.agregarInput('filtroNombre', 'nombre');
+        filtrosPenSecretario.agregarInput('filtroNombre', 'nombre');
         filtrosPenSecretario.precargar();
     </script>
 {% endblock %}

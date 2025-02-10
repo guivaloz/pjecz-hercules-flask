@@ -9,6 +9,7 @@ from flask_login import current_user, login_required
 
 from hercules.blueprints.bitacoras.models import Bitacora
 from hercules.blueprints.modulos.models import Modulo
+from hercules.blueprints.pen_secretarios.forms import PenSecretarioForm
 from hercules.blueprints.pen_secretarios.models import PenSecretario
 from hercules.blueprints.permisos.models import Permiso
 from hercules.blueprints.usuarios.decorators import permission_required
@@ -91,3 +92,81 @@ def detail(pen_secretario_id):
     """Detalle de un Secretario"""
     pen_secretario = PenSecretario.query.get_or_404(pen_secretario_id)
     return render_template("pen_secretarios/detail.jinja2", pen_secretario=pen_secretario)
+
+
+@pen_secretarios.route("/pen_secretarios/nuevo", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.CREAR)
+def new():
+    """Nuevo Secretario"""
+    form = PenSecretarioForm()
+    if form.validate_on_submit():
+        pen_secretario = PenSecretario(nombre=safe_string(form.nombre.data, save_enie=True))
+        pen_secretario.save()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Nuevo Secretario {pen_secretario.nombre}"),
+            url=url_for("pen_secretarios.detail", pen_secretario_id=pen_secretario.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(bitacora.url)
+    return render_template("pen_secretarios/new.jinja2", form=form)
+
+
+@pen_secretarios.route("/pen_secretarios/edicion/<int:pen_secretario_id>", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.MODIFICAR)
+def edit(pen_secretario_id):
+    """Editar Secretario"""
+    pen_secretario = PenSecretario.query.get_or_404(pen_secretario_id)
+    form = PenSecretarioForm()
+    if form.validate_on_submit():
+        pen_secretario.nombre = safe_string(form.nombre.data, save_enie=True)
+        pen_secretario.save()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Editado Secretario {pen_secretario.nombre}"),
+            url=url_for("pen_secretarios.detail", pen_secretario_id=pen_secretario.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(bitacora.url)
+    form.nombre.data = pen_secretario.nombre
+    return render_template("pen_secretarios/edit.jinja2", form=form, pen_secretario=pen_secretario)
+
+
+@pen_secretarios.route("/pen_secretarios/eliminar/<int:pen_secretario_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def delete(pen_secretario_id):
+    """Eliminar Secretario"""
+    pen_secretario = PenSecretario.query.get_or_404(pen_secretario_id)
+    if pen_secretario.estatus == "A":
+        pen_secretario.delete()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Eliminado Secretario {pen_secretario.nombre}"),
+            url=url_for("pen_secretarios.detail", pen_secretario_id=pen_secretario.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("pen_secretarios.detail", pen_secretario_id=pen_secretario.id))
+
+
+@pen_secretarios.route("/pen_secretarios/recuperar/<int:pen_secretario_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def recover(pen_secretario_id):
+    """Recuperar Secretario"""
+    pen_secretario = PenSecretario.query.get_or_404(pen_secretario_id)
+    if pen_secretario.estatus == "B":
+        pen_secretario.recover()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Recuperado Secretario {pen_secretario.nombre}"),
+            url=url_for("pen_secretarios.detail", pen_secretario_id=pen_secretario.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("pen_secretarios.detail", pen_secretario_id=pen_secretario.id))

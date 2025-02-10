@@ -8,13 +8,13 @@
 {% block topbar_actions %}
     {% call topbar.page_buttons('Juez ' + pen_juez.nombre) %}
         {{ topbar.button_previous('Jueces', url_for('pen_jueces.list_active')) }}
-        {# if current_user.can_edit('PEN JUECES') %}
+        {% if current_user.can_edit('PEN JUECES') %}
             {{ topbar.button_edit('Editar', url_for('pen_jueces.edit', pen_juez_id=pen_juez.id)) }}
-        {% endif #}
-        {# if current_user.can_admin('PEN JUECES') %}
+        {% endif %}
+        {% if current_user.can_admin('PEN JUECES') %}
             {% if pen_juez.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('pen_jueces.delete', pen_juez_id=pen_juez.id)) }}{% endif %}
             {% if pen_juez.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('pen_jueces.recover', pen_juez_id=pen_juez.id)) }}{% endif %}
-        {% endif #}
+        {% endif %}
     {% endcall %}
 {% endblock %}
 
@@ -25,8 +25,8 @@
 {% endblock %}
 
 {% block custom_javascript %}
-    {# if current_user.can_admin('PEN JUECES') %}
+    {% if current_user.can_admin('PEN JUECES') %}
         {% if pen_juez.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + pen_juez.nombre + '?') }}{% endif %}
         {% if pen_juez.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + pen_juez.nombre + '?') }}{% endif %}
-    {% endif #}
+    {% endif %}
 {% endblock %}

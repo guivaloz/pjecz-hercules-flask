@@ -9,6 +9,7 @@ from flask_login import current_user, login_required
 
 from hercules.blueprints.bitacoras.models import Bitacora
 from hercules.blueprints.modulos.models import Modulo
+from hercules.blueprints.pen_agentes_mp.forms import PenAgenteMPForm
 from hercules.blueprints.pen_agentes_mp.models import PenAgenteMP
 from hercules.blueprints.permisos.models import Permiso
 from hercules.blueprints.usuarios.decorators import permission_required
@@ -91,3 +92,81 @@ def detail(pen_agente_mp_id):
     """Detalle de un Agente MP"""
     pen_agente_mp = PenAgenteMP.query.get_or_404(pen_agente_mp_id)
     return render_template("pen_agentes_mp/detail.jinja2", pen_agente_mp=pen_agente_mp)
+
+
+@pen_agentes_mp.route("/pen_agentes_mp/nuevo", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.CREAR)
+def new():
+    """Nuevo Agente MP"""
+    form = PenAgenteMPForm()
+    if form.validate_on_submit():
+        pen_agente_mp = PenAgenteMP(nombre=safe_string(form.nombre.data, save_enie=True))
+        pen_agente_mp.save()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Nuevo Agente MP {pen_agente_mp.nombre}"),
+            url=url_for("pen_agentes_mp.detail", pen_agente_mp_id=pen_agente_mp.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(bitacora.url)
+    return render_template("pen_agentes_mp/new.jinja2", form=form)
+
+
+@pen_agentes_mp.route("/pen_agentes_mp/edicion/<int:pen_agente_mp_id>", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.MODIFICAR)
+def edit(pen_agente_mp_id):
+    """Editar Agente MP"""
+    pen_agente_mp = PenAgenteMP.query.get_or_404(pen_agente_mp_id)
+    form = PenAgenteMPForm()
+    if form.validate_on_submit():
+        pen_agente_mp.nombre = safe_string(form.nombre.data, save_enie=True)
+        pen_agente_mp.save()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Editado Agente MP {pen_agente_mp.nombre}"),
+            url=url_for("pen_agentes_mp.detail", pen_agente_mp_id=pen_agente_mp.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(bitacora.url)
+    form.nombre.data = pen_agente_mp.nombre
+    return render_template("pen_agentes_mp/edit.jinja2", form=form, pen_agente_mp=pen_agente_mp)
+
+
+@pen_agentes_mp.route("/pen_agentes_mp/eliminar/<int:pen_agente_mp_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def delete(pen_agente_mp_id):
+    """Eliminar Agente MP"""
+    pen_agente_mp = PenAgenteMP.query.get_or_404(pen_agente_mp_id)
+    if pen_agente_mp.estatus == "A":
+        pen_agente_mp.delete()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Eliminado Modulo {pen_agente_mp.nombre}"),
+            url=url_for("pen_agentes_mp.detail", instance_id=pen_agente_mp.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("pen_agentes_mp.detail", pen_agente_mp_id=pen_agente_mp.id))
+
+
+@pen_agentes_mp.route("/pen_agentes_mp/recuperar/<int:pen_agente_mp_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def recover(pen_agente_mp_id):
+    """Recuperar Agente MP"""
+    pen_agente_mp = PenAgenteMP.query.get_or_404(pen_agente_mp_id)
+    if pen_agente_mp.estatus == "B":
+        pen_agente_mp.recover()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Recuperado Agente MP {pen_agente_mp.nombre}"),
+            url=url_for("pen_agentes_mp.detail", pen_agente_mp_id=pen_agente_mp.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("pen_agentes_mp.detail", pen_agente_mp_id=pen_agente_mp.id))
