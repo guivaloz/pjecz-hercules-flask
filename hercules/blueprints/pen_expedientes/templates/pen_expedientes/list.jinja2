@@ -22,9 +22,9 @@
             {% if estatus == 'A' %}{{ topbar.button_list_inactive('Inactivos', url_for('pen_expedientes.list_inactive')) }}{% endif %}
             {% if estatus == 'B' %}{{ topbar.button_list_active('Activos', url_for('pen_expedientes.list_active')) }}{% endif %}
         {% endif %}
-        {# if current_user.can_insert('PEN EXPEDIENTES') %}
+        {% if current_user.can_insert('PEN EXPEDIENTES') %}
             {{ topbar.button_new('Nuevo Expediente', url_for('pen_expedientes.new')) }}
-        {% endif #}
+        {% endif %}
     {% endcall %}
 {% endblock %}
 

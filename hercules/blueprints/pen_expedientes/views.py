@@ -7,13 +7,16 @@ import json
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
+from hercules.blueprints.autoridades.models import Autoridad
 from hercules.blueprints.bitacoras.models import Bitacora
+from hercules.blueprints.distritos.models import Distrito
 from hercules.blueprints.modulos.models import Modulo
+from hercules.blueprints.pen_expedientes.forms import PenExpedienteForm
 from hercules.blueprints.pen_expedientes.models import PenExpediente
 from hercules.blueprints.permisos.models import Permiso
 from hercules.blueprints.usuarios.decorators import permission_required
 from lib.datatables import get_datatable_parameters, output_datatable_json
-from lib.safe_string import safe_message, safe_string
+from lib.safe_string import safe_expediente, safe_message, safe_string
 
 MODULO = "PEN EXPEDIENTES"
 
@@ -95,3 +98,96 @@ def detail(pen_expediente_id):
     """Detalle de un Expediente"""
     pen_expediente = PenExpediente.query.get_or_404(pen_expediente_id)
     return render_template("pen_expedientes/detail.jinja2", pen_expediente=pen_expediente)
+
+
+@pen_expedientes.route("/pen_expedientes/nuevo", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.CREAR)
+def new():
+    """Nuevo Expediente"""
+    form = PenExpedienteForm()
+    if form.validate_on_submit():
+        expediente = safe_expediente(form.expediente.data)
+        fecha = form.fecha.data
+        autoridad_id = form.autoridad.data
+        juez_id = form.juez.data
+        secretario_id = form.secretario.data
+        agente_mp_id = form.agente_mp.data
+        delitos = safe_string(form.delitos.data, save_enie=True)
+        pen_expediente = PenExpediente(
+            expedinte=expediente,
+            fecha=fecha,
+            autoridad_id=autoridad_id,
+            juez_id=juez_id,
+            secretario_id=secretario_id,
+            agente_mp_id=agente_mp_id,
+            delitos=delitos,
+        )
+        pen_expediente.save()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Nuevo Expediente {pen_expediente.expediente}"),
+            url=url_for("pen_expedientes.detail", pen_expediente_id=pen_expediente.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(bitacora.url)
+    return render_template("pen_expedientes/new.jinja2", form=form)
+
+
+@pen_expedientes.route("/pen_expedientes/edicion/<int:pen_expediente_id>", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.MODIFICAR)
+def edit(pen_expediente_id):
+    """Editar Expediente"""
+    pen_expediente = PenExpediente.query.get_or_404(pen_expediente_id)
+    form = PenExpedienteForm()
+    if form.validate_on_submit():
+        pen_expediente.delitos = safe_string(form.delitos.data)
+        pen_expediente.save()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Editado Expediente {pen_expediente.delitos}"),
+            url=url_for("pen_expedientes.detail", pen_expediente_id=pen_expediente.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(bitacora.url)
+    form.delitos.data = pen_expediente.delitos
+    return render_template("pen_expedientes/edit.jinja2", form=form, pen_expediente=pen_expediente)
+
+
+@pen_expedientes.route("/pen_expedientes/eliminar/<int:pen_expediente_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def delete(pen_expediente_id):
+    """Eliminar Expediente"""
+    pen_expediente = PenExpediente.query.get_or_404(pen_expediente_id)
+    if pen_expediente.estatus == "A":
+        pen_expediente.delete()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Eliminado Expediente {pen_expediente.expediente}"),
+            url=url_for("pen_expedientes.detail", pen_expediente_id=pen_expediente.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("pen_expedientes.detail", pen_expediente_id=pen_expediente.id))
+
+
+@pen_expedientes.route("/pen_expedientes/recuperar/<int:pen_expediente_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def recover(pen_expediente_id):
+    """Recuperar Expediente"""
+    pen_expediente = PenExpediente.query.get_or_404(pen_expediente_id)
+    if pen_expediente.estatus == "B":
+        pen_expediente.recover()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Recuperado Expediente {pen_expediente.expediente}"),
+            url=url_for("pen_expedientes.detail", pen_expediente_id=pen_expediente.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("pen_expedientes.detail", pen_expediente_id=pen_expediente.id))

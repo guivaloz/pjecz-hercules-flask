@@ -170,3 +170,17 @@ def recover(pen_juez_id):
         bitacora.save()
         flash(bitacora.descripcion, "success")
     return redirect(url_for("pen_jueces.detail", pen_juez_id=pen_juez.id))
+
+
+@pen_jueces.route("/pen_jueces/select2_json", methods=["GET", "POST"])
+def select2_json():
+    """Proporcionar el JSON de jueces para elegir con un Select2"""
+    consulta = PenJuez.query.filter(PenJuez.estatus == "A")
+    if "searchString" in request.form:
+        nombre = safe_string(request.form["searchString"], save_enie=True)
+        if nombre != "":
+            consulta = consulta.filter(PenJuez.nombre.contains(nombre))
+    resultados = []
+    for pen_juez in consulta.order_by(PenJuez.nombre).limit(10).all():
+        resultados.append({"id": pen_juez.id, "text": pen_juez.nombre})
+    return {"results": resultados, "pagination": {"more": False}}

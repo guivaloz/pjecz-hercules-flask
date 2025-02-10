@@ -170,3 +170,17 @@ def recover(pen_secretario_id):
         bitacora.save()
         flash(bitacora.descripcion, "success")
     return redirect(url_for("pen_secretarios.detail", pen_secretario_id=pen_secretario.id))
+
+
+@pen_secretarios.route("/pen_secretarios/select2_json", methods=["GET", "POST"])
+def select2_json():
+    """Proporcionar el JSON de secretarios para elegir con un Select2"""
+    consulta = PenSecretario.query.filter(PenSecretario.estatus == "A")
+    if "searchString" in request.form:
+        nombre = safe_string(request.form["searchString"], save_enie=True)
+        if nombre != "":
+            consulta = consulta.filter(PenSecretario.nombre.contains(nombre))
+    resultados = []
+    for pen_secretario in consulta.order_by(PenSecretario.nombre).limit(10).all():
+        resultados.append({"id": pen_secretario.id, "text": pen_secretario.nombre})
+    return {"results": resultados, "pagination": {"more": False}}

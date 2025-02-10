@@ -1,0 +1,104 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/form.jinja2' as f with context %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Nuevo Expediente{% endblock %}
+
+{% block custom_head %}
+    <!-- Select2 bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://storage.googleapis.com/pjecz-informatica/static/css/select2.css" rel="stylesheet" />
+{% endblock %}
+
+{% block topbar_actions %}
+    {{ topbar.page('Nuevo Expediente') }}
+{% endblock %}
+
+{% block content %}
+    {% call f.card() %}
+        {% call f.form_tag('pen_expedientes.new', fid='pen_expdiente_form') %}
+            {% call f.form_group(form.expediente) %}{% endcall %}
+            {% call f.form_group(form.fecha) %}{% endcall %}
+            {% call f.form_group(form.autoridad) %}{% endcall %}
+            {% call f.form_group(form.juez) %}{% endcall %}
+            {% call f.form_group(form.secretario) %}{% endcall %}
+            {% call f.form_group(form.agente_mp) %}{% endcall %}
+            {% call f.form_group(form.delitos) %}{% endcall %}
+            {% call f.form_group(form.guardar) %}{% endcall %}
+        {% endcall %}
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    <!-- Select2 -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        // Cuando esté listo el DOM
+        $(document).ready(function(){
+            // Preparar Select2 para autoridad
+            $('#autoridad').select2({
+                placeholder: {id: "", text: ""},
+                allowClear: true,
+                minimumInputLength: 4,
+                ajax: {
+                    url: '/autoridades/select2_json',
+                    headers: { "X-CSRF-TOKEN": "{{ csrf_token() }}" },
+                    dataType: 'json',
+                    delay: 250,
+                    type: "POST",
+                    data: function (params) {
+                        return { 'searchString': params.term }
+                    }
+                }
+            });
+            // Preparar Select2 para juez
+            $('#juez').select2({
+                placeholder: {id: "", text: ""},
+                allowClear: true,
+                minimumInputLength: 4,
+                ajax: {
+                    url: '/pen_jueces/select2_json',
+                    headers: { "X-CSRF-TOKEN": "{{ csrf_token() }}" },
+                    dataType: 'json',
+                    delay: 250,
+                    type: "POST",
+                    data: function (params) {
+                        return { 'searchString': params.term }
+                    }
+                }
+            });
+            // Preparar Select2 para secretario
+            $('#secretario').select2({
+                placeholder: {id: "", text: ""},
+                allowClear: true,
+                minimumInputLength: 4,
+                ajax: {
+                    url: '/pen_secretarios/select2_json',
+                    headers: { "X-CSRF-TOKEN": "{{ csrf_token() }}" },
+                    dataType: 'json',
+                    delay: 250,
+                    type: "POST",
+                    data: function (params) {
+                        return { 'searchString': params.term }
+                    }
+                }
+            });
+            // Preparar Select2 para agente_mp
+            $('#agente_mp').select2({
+                placeholder: {id: "", text: ""},
+                allowClear: true,
+                minimumInputLength: 4,
+                ajax: {
+                    url: '/pen_agentes_mp/select2_json',
+                    headers: { "X-CSRF-TOKEN": "{{ csrf_token() }}" },
+                    dataType: 'json',
+                    delay: 250,
+                    type: "POST",
+                    data: function (params) {
+                        return { 'searchString': params.term }
+                    }
+                }
+            });
+        });
+    </script>
+{% endblock %}

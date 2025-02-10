@@ -1,0 +1,30 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/form.jinja2' as f with context %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Editar Expediente {{ pen_expediente.expediente }}{% endblock %}
+
+{% block topbar_actions %}
+    {{ topbar.page('Editar ' + pen_expediente.expediente) }}
+{% endblock %}
+
+{% block content %}
+    {% call f.card() %}
+        {% set form_kwargs = {'pen_expediente_id': pen_expediente.id} %}
+        {% call f.form_tag('pen_expedientes.edit', fid='pen_expediente_form', **form_kwargs) %}
+            {% call f.form_group(form.expediente) %}{% endcall %}
+            {% call f.form_group(form.fecha) %}{% endcall %}
+            {% call f.form_group(form.distrito) %}{% endcall %}
+            {% call f.form_group(form.autoridad) %}{% endcall %}
+            {% call f.form_group(form.juez) %}{% endcall %}
+            {% call f.form_group(form.secretario) %}{% endcall %}
+            {% call f.form_group(form.agente_mp) %}{% endcall %}
+            {% call f.form_group(form.delitos) %}{% endcall %}
+            {% call f.form_group(form.guardar) %}{% endcall %}
+        {% endcall %}
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {{ f.js_select_distrito_autoridad(distritos, autoridades, mi_distrito=distrito_no_definido.id, mi_autoridad=autoridad_no_definido.id) }}
+{% endblock %}

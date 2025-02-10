@@ -170,3 +170,17 @@ def recover(pen_agente_mp_id):
         bitacora.save()
         flash(bitacora.descripcion, "success")
     return redirect(url_for("pen_agentes_mp.detail", pen_agente_mp_id=pen_agente_mp.id))
+
+
+@pen_agentes_mp.route("/pen_agentes_mp/select2_json", methods=["GET", "POST"])
+def select2_json():
+    """Proporcionar el JSON de agentes mp para elegir con un Select2"""
+    consulta = PenAgenteMP.query.filter(PenAgenteMP.estatus == "A")
+    if "searchString" in request.form:
+        nombre = safe_string(request.form["searchString"], save_enie=True)
+        if nombre != "":
+            consulta = consulta.filter(PenAgenteMP.nombre.contains(nombre))
+    resultados = []
+    for pen_agente_mp in consulta.order_by(PenAgenteMP.nombre).limit(10).all():
+        resultados.append({"id": pen_agente_mp.id, "text": pen_agente_mp.nombre})
+    return {"results": resultados, "pagination": {"more": False}}
