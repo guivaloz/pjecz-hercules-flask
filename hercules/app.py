@@ -64,6 +64,11 @@ from hercules.blueprints.modulos.views import modulos
 from hercules.blueprints.municipios.views import municipios
 from hercules.blueprints.nom_personas.views import nom_personas
 from hercules.blueprints.oficinas.views import oficinas
+from hercules.blueprints.pen_agentes_mp.views import pen_agentes_mp
+from hercules.blueprints.pen_expedientes.views import pen_expedientes
+from hercules.blueprints.pen_inculpados.views import pen_inculpados
+from hercules.blueprints.pen_jueces.views import pen_jueces
+from hercules.blueprints.pen_secretarios.views import pen_secretarios
 from hercules.blueprints.peritos.views import peritos
 from hercules.blueprints.peritos_tipos.views import peritos_tipos
 from hercules.blueprints.permisos.views import permisos
@@ -159,6 +164,11 @@ def create_app():
     app.register_blueprint(municipios)
     app.register_blueprint(nom_personas)
     app.register_blueprint(oficinas)
+    app.register_blueprint(pen_agentes_mp)
+    app.register_blueprint(pen_expedientes)
+    app.register_blueprint(pen_inculpados)
+    app.register_blueprint(pen_jueces)
+    app.register_blueprint(pen_secretarios)
     app.register_blueprint(peritos)
     app.register_blueprint(peritos_tipos)
     app.register_blueprint(permisos)

@@ -24,7 +24,7 @@ class PenSecretario(database.Model, UniversalMixin):
     nombre: Mapped[str] = mapped_column(String(256))
 
     # Hijos
-    pen_expedientes: Mapped[List["PenExpediente"]] = relationship(back_populates="pen_agente_mp")
+    pen_expedientes: Mapped[List["PenExpediente"]] = relationship(back_populates="pen_secretario")
 
     def __repr__(self):
         """Representación"""

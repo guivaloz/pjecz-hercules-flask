@@ -53,6 +53,11 @@ def alimentar_autoridades():
             directorio_sentencias = row["directorio_sentencias"]
             audiencia_categoria = row["audiencia_categoria"]
             limite_dias_listas_de_acuerdos = int(row["limite_dias_listas_de_acuerdos"])
+            try:
+                datawarehouse_id = int(row["datawarehouse_id"])
+            except ValueError:
+                datawarehouse_id = 0
+            sede = row["sede"]
             estatus = row["estatus"]
             if autoridad_id != contador + 1:
                 click.echo(click.style(f"  AVISO: autoridad_id {autoridad_id} no es consecutivo", fg="red"))
@@ -91,6 +96,8 @@ def alimentar_autoridades():
                 directorio_sentencias=directorio_sentencias,
                 audiencia_categoria=audiencia_categoria,
                 limite_dias_listas_de_acuerdos=limite_dias_listas_de_acuerdos,
+                datawarehouse_id=datawarehouse_id,
+                sede=sede,
                 estatus=estatus,
             ).save()
             contador += 1

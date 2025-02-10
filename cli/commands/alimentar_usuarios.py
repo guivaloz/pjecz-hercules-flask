@@ -42,6 +42,7 @@ def alimentar_usuarios():
             apellido_materno = safe_string(row["apellido_materno"], save_enie=True)
             curp = safe_string(row["curp"])
             puesto = safe_string(row["puesto"], save_enie=True)
+            workspace = safe_string(row["workspace"])
             estatus = row["estatus"]
             # if usuario_id != contador + 1:
             #     click.echo(click.style(f"  AVISO: usuario_id {usuario_id} no es consecutivo", fg="red"))
@@ -63,6 +64,7 @@ def alimentar_usuarios():
                 apellido_materno=apellido_materno,
                 curp=curp,
                 puesto=puesto,
+                workspace=workspace,
                 estatus=estatus,
                 api_key="",
                 api_key_expiracion=datetime(year=2000, month=1, day=1),

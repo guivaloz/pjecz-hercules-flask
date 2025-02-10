@@ -100,6 +100,7 @@ class Autoridad(database.Model, UniversalMixin):
     exh_exhortos: Mapped[List["ExhExhorto"]] = relationship(back_populates="autoridad")
     glosas: Mapped[List["Glosa"]] = relationship(back_populates="autoridad")
     listas_de_acuerdos: Mapped[List["ListaDeAcuerdo"]] = relationship(back_populates="autoridad")
+    pen_expedientes: Mapped[List["PenExpediente"]] = relationship(back_populates="autoridad")
     redam: Mapped[List["Redam"]] = relationship("Redam", back_populates="autoridad")
     sentencias: Mapped[List["Sentencia"]] = relationship(back_populates="autoridad")
     ubicaciones_expedientes: Mapped[List["UbicacionExpediente"]] = relationship(back_populates="autoridad")

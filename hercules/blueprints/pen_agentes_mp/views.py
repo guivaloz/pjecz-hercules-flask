@@ -86,18 +86,6 @@ def list_inactive():
     )
 
 
-@pen_agentes_mp.route("/pen_agentes_mp/inactivos")
-@permission_required(MODULO, Permiso.ADMINISTRAR)
-def list_inactive():
-    """Listado de Agentes MP inactivos"""
-    return render_template(
-        "pen_agentes_mp/list.jinja2",
-        filtros=json.dumps({"estatus": "B"}),
-        titulo="Agentes MP inactivos",
-        estatus="B",
-    )
-
-
 @pen_agentes_mp.route("/pen_agentes_mp/<int:pen_agente_mp_id>")
 def detail(pen_agente_mp_id):
     """Detalle de un Agente MP"""
