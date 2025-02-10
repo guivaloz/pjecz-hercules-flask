@@ -1,0 +1,37 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Inculpado {{ pen_inculpado.nombre }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Inculpado ' + pen_inculpado.nombre) %}
+        {{ topbar.button_previous('Inculpados', url_for('pen_inculpados.list_active')) }}
+        {# if current_user.can_edit('PEN INCULPADOS') %}
+            {{ topbar.button_edit('Editar', url_for('pen_inculpados.edit', pen_inculpado_id=pen_inculpado.id)) }}
+        {% endif #}
+        {# if current_user.can_admin('PEN INCULPADOS') %}
+            {% if pen_inculpado.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('pen_inculpados.delete', pen_inculpado_id=pen_inculpado.id)) }}{% endif %}
+            {% if pen_inculpado.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('pen_inculpados.recover', pen_inculpado_id=pen_inculpado.id)) }}{% endif %}
+        {% endif #}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=pen_inculpado.estatus) %}
+        {{ detail.label_value('Nombres', pen_inculpado.nombres) }}
+        {{ detail.label_value('Apellido paterno', pen_inculpado.apellido_paterno) }}
+        {{ detail.label_value('Apellido materno', pen_inculpado.apellido_materno) }}
+        {{ detail.label_value('Sexo', pen_inculpado.sexo) }}
+        {{ detail.label_value('Status', pen_inculpado.estado) }}
+        {{ detail.label_value('Solicitud MP', pen_inculpado.solicitud_mp) }}
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {# if current_user.can_admin('PEN INCULPADOS') %}
+        {% if pen_inculpado.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + pen_inculpado.nombre + '?') }}{% endif %}
+        {% if pen_inculpado.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + pen_inculpado.nombre + '?') }}{% endif %}
+    {% endif #}
+{% endblock %}

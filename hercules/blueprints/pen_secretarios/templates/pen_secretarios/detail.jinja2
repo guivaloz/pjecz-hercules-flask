@@ -1,0 +1,32 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Secretario {{ pen_secretario.nombre }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Secretario ' + pen_secretario.nombre) %}
+        {{ topbar.button_previous('Secretarios', url_for('pen_secretarios.list_active')) }}
+        {# if current_user.can_edit('PEN SECRETARIOS') %}
+            {{ topbar.button_edit('Editar', url_for('pen_secretarios.edit', pen_secretario_id=pen_secretario.id)) }}
+        {% endif #}
+        {# if current_user.can_admin('PEN SECRETARIOS') %}
+            {% if pen_secretario.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('pen_secretarios.delete', pen_secretario_id=pen_secretario.id)) }}{% endif %}
+            {% if pen_secretario.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('pen_secretarios.recover', pen_secretario_id=pen_secretario.id)) }}{% endif %}
+        {% endif #}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=pen_secretario.estatus) %}
+        {{ detail.label_value('Nombre', pen_secretario.nombre) }}
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {# if current_user.can_admin('PEN SECRETARIOS') %}
+        {% if pen_secretario.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + pen_secretario.nombre + '?') }}{% endif %}
+        {% if pen_secretario.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + pen_secretario.nombre + '?') }}{% endif %}
+    {% endif #}
+{% endblock %}

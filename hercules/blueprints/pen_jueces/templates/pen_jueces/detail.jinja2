@@ -1,0 +1,32 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Juez {{ pen_juez.nombre }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Juez ' + pen_juez.nombre) %}
+        {{ topbar.button_previous('Jueces', url_for('pen_jueces.list_active')) }}
+        {# if current_user.can_edit('PEN JUECES') %}
+            {{ topbar.button_edit('Editar', url_for('pen_jueces.edit', pen_juez_id=pen_juez.id)) }}
+        {% endif #}
+        {# if current_user.can_admin('PEN JUECES') %}
+            {% if pen_juez.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('pen_jueces.delete', pen_juez_id=pen_juez.id)) }}{% endif %}
+            {% if pen_juez.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('pen_jueces.recover', pen_juez_id=pen_juez.id)) }}{% endif %}
+        {% endif #}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=pen_juez.estatus) %}
+        {{ detail.label_value('Nombre', pen_juez.nombre) }}
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {# if current_user.can_admin('PEN JUECES') %}
+        {% if pen_juez.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + pen_juez.nombre + '?') }}{% endif %}
+        {% if pen_juez.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + pen_juez.nombre + '?') }}{% endif %}
+    {% endif #}
+{% endblock %}

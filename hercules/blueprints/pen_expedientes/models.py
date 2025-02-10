@@ -34,7 +34,6 @@ class PenExpediente(database.Model, UniversalMixin):
     # Columnas
     expediente: Mapped[str] = mapped_column(String(24), unique=True)
     fecha: Mapped[date]
-    secretario: Mapped[str] = mapped_column(String(256))
     delitos: Mapped[str] = mapped_column(String(256))
 
     # Hijos

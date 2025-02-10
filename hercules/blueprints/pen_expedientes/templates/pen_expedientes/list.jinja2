@@ -1,0 +1,85 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/list.jinja2' as list %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons(titulo) %}
+        {% if current_user.can_admin('PEN EXPEDIENTES') %}
+            {% if estatus == 'A' %}{{ topbar.button_list_inactive('Inactivos', url_for('pen_expedientes.list_inactive')) }}{% endif %}
+            {% if estatus == 'B' %}{{ topbar.button_list_active('Activos', url_for('pen_expedientes.list_active')) }}{% endif %}
+        {% endif %}
+        {# if current_user.can_insert('PEN EXPEDIENTES') %}
+            {{ topbar.button_new('Nuevo Expediente', url_for('pen_expedientes.new')) }}
+        {% endif #}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call list.card() %}
+        <!-- Filtros pen_expedientes -->
+        <div class="row">
+            <div class="col">
+                <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosPenExpedientes.buscar(); return false;">
+                    <div class="col-4">
+                        <div class="form-floating">
+                            <input id="filtroExpediente" type="text" class="form-control" aria-label="Expediente" style="text-transform: uppercase;">
+                            <label for="filtroExpediente">Expediente</label>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                    </div>
+                    <div class="col-2 text-end">
+                        <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosPenExpedientes.buscar(); return false;" id="button-buscar"><span class="iconify" data-icon="mdi:magnify"></span></button>
+                        <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosPenExpedientes.limpiar();" id="button-limpiar"><span class="iconify" data-icon="mdi:broom"></span></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- DataTable pen_expedientes -->
+        <table id="pen_expedientes_datatable" class="table {% if estatus == 'B'%}table-dark{% endif %} display nowrap" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Expediente</th>
+                    <th>Fecha</th>
+                    <th>Juzgado</th>
+                    <th>Juez</th>
+                    <th>Secretario</th>
+                </tr>
+            </thead>
+        </table>
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    <script src="/static/js/datatables-constructor.js"></script>
+    <script src="/static/js/datatables-filtros.js"></script>
+    <script>
+        // DataTable pen_expedientes
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+        let configDataTable = constructorDataTable.config();
+        configDataTable['ajax']['url'] = '/pen_expedientes/datatable_json';
+        configDataTable['ajax']['data'] = {{ filtros }};
+        configDataTable['columns'] = [
+            { data: 'detalle' },
+            { data: 'fecha' },
+            { data: 'autoridad_clave' },
+            { data: 'juez_nombre' },
+            { data: 'secretario_nombre' }
+        ];
+        configDataTable['columnDefs'] = [
+            {
+                targets: 0, // detalle
+                data: null,
+                render: function(data, type, row, meta) {
+                    return '<a href="' + data.url + '">' + data.expediente + '</a>';
+                }
+            }
+        ];
+        // Filtros pen_expedientes
+        const filtrosPenExpedientes = new FiltrosDataTable('#pen_expedientes_datatable', configDataTable);
+        filtrosPenExpedientes.agregarInput('filtroExpediente', 'expediente');
+        filtrosPenExpedientes.precargar();
+    </script>
+{% endblock %}

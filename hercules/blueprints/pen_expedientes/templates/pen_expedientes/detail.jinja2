@@ -1,0 +1,38 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Expediente {{ pen_expediente.expediente }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Expediente ' + pen_expediente.expediente) %}
+        {{ topbar.button_previous('Expedientes', url_for('pen_expedientes.list_active')) }}
+        {# if current_user.can_edit('PEN EXPEDIENTES') %}
+            {{ topbar.button_edit('Editar', url_for('pen_expedientes.edit', pen_expediente_id=pen_expediente.id)) }}
+        {% endif #}
+        {# if current_user.can_admin('PEN EXPEDIENTES') %}
+            {% if pen_expediente.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('pen_expedientes.delete', pen_expediente_id=pen_expediente.id)) }}{% endif %}
+            {% if pen_expediente.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('pen_expedientes.recover', pen_expediente_id=pen_expediente.id)) }}{% endif %}
+        {% endif #}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=pen_expediente.estatus) %}
+        {{ detail.label_value('Expediente', pen_expediente.expediente) }}
+        {{ detail.label_value('Fecha', pen_expediente.fecha) }}
+        {{ detail.label_value('Juzgado', pen_expediente.autoridad.descripcion_corta) }}
+        {{ detail.label_value('Agente MP', pen_expediente.pen_agente_mp.nombre) }}
+        {{ detail.label_value('Juez', pen_expediente.pen_juez.nombre) }}
+        {{ detail.label_value('Secretario', pen_expediente.pen_secretario.nombre) }}
+        {{ detail.label_value('Delitos', pen_expediente.delitos) }}
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {# if current_user.can_admin('PEN EXPEDIENTES') %}
+        {% if pen_expediente.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + pen_expediente.expediente + '?') }}{% endif %}
+        {% if pen_expediente.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + pen_expediente.expediente + '?') }}{% endif %}
+    {% endif #}
+{% endblock %}
