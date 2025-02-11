@@ -39,7 +39,7 @@
             $('#autoridad').select2({
                 placeholder: {id: "", text: ""},
                 allowClear: true,
-                minimumInputLength: 4,
+                minimumInputLength: 3,
                 ajax: {
                     url: '/autoridades/select2_json',
                     headers: { "X-CSRF-TOKEN": "{{ csrf_token() }}" },
@@ -55,7 +55,7 @@
             $('#juez').select2({
                 placeholder: {id: "", text: ""},
                 allowClear: true,
-                minimumInputLength: 4,
+                minimumInputLength: 3,
                 ajax: {
                     url: '/pen_jueces/select2_json',
                     headers: { "X-CSRF-TOKEN": "{{ csrf_token() }}" },
@@ -71,7 +71,7 @@
             $('#secretario').select2({
                 placeholder: {id: "", text: ""},
                 allowClear: true,
-                minimumInputLength: 4,
+                minimumInputLength: 3,
                 ajax: {
                     url: '/pen_secretarios/select2_json',
                     headers: { "X-CSRF-TOKEN": "{{ csrf_token() }}" },
@@ -87,7 +87,7 @@
             $('#agente_mp').select2({
                 placeholder: {id: "", text: ""},
                 allowClear: true,
-                minimumInputLength: 4,
+                minimumInputLength: 3,
                 ajax: {
                     url: '/pen_agentes_mp/select2_json',
                     headers: { "X-CSRF-TOKEN": "{{ csrf_token() }}" },

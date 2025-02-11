@@ -9,14 +9,14 @@ from wtforms.validators import DataRequired, Length, Optional
 from hercules.blueprints.pen_inculpados.models import PenInculpado
 
 
-class PenInculpadosForm(FlaskForm):
+class PenInculpadoForm(FlaskForm):
     """Formulario PenInculpados"""
 
     nombres = StringField("Descripción", validators=[DataRequired(), Length(max=256)])
     apellido_paterno = StringField("Descripción", validators=[DataRequired(), Length(max=256)])
     apellido_materno = StringField("Descripción", validators=[Optional(), Length(max=256)])
     apodo = StringField("Descripción", validators=[Optional(), Length(max=256)])
-    sexo = SelectField("Sexo", choices=PenInculpado.items(), validators=[DataRequired()])
+    sexo = SelectField("Sexo", choices=PenInculpado.SEXOS.items(), validators=[DataRequired()])
     estado = StringField("Status", validators=[Optional(), Length(max=256)])
     solicitud_mp = StringField("Solicitud M.P.", validators=[Optional(), Length(max=256)])
     guardar = SubmitField("Guardar")

@@ -62,8 +62,8 @@ def datatable_json():
                 },
                 "fecha": resultado.fecha.strftime("%Y-%m-%d"),
                 "autoridad_clave": resultado.autoridad.clave,
-                "juez_nombre": resultado.juez.nombre,
-                "secretario_nombre": resultado.secretario.nombre,
+                "pen_juez_nombre": resultado.pen_juez.nombre,
+                "pen_secretario_nombre": resultado.pen_secretario.nombre,
             }
         )
     # Entregar JSON
@@ -108,18 +108,18 @@ def new():
     if form.validate_on_submit():
         expediente = safe_expediente(form.expediente.data)
         fecha = form.fecha.data
-        autoridad_id = form.autoridad.data
-        juez_id = form.juez.data
-        secretario_id = form.secretario.data
-        agente_mp_id = form.agente_mp.data
+        autoridad_id = form.autoridad.data  # Select2
+        pen_juez_id = form.juez.data  # Select2
+        pen_secretario_id = form.secretario.data  # Select2
+        pen_agente_mp_id = form.agente_mp.data  # Select2
         delitos = safe_string(form.delitos.data, save_enie=True)
         pen_expediente = PenExpediente(
-            expedinte=expediente,
+            expediente=expediente,
             fecha=fecha,
             autoridad_id=autoridad_id,
-            juez_id=juez_id,
-            secretario_id=secretario_id,
-            agente_mp_id=agente_mp_id,
+            pen_juez_id=pen_juez_id,
+            pen_secretario_id=pen_secretario_id,
+            pen_agente_mp_id=pen_agente_mp_id,
             delitos=delitos,
         )
         pen_expediente.save()
@@ -142,6 +142,12 @@ def edit(pen_expediente_id):
     pen_expediente = PenExpediente.query.get_or_404(pen_expediente_id)
     form = PenExpedienteForm()
     if form.validate_on_submit():
+        pen_expediente.expediente = safe_expediente(form.expediente.data)
+        pen_expediente.fecha = form.fecha.data
+        pen_expediente.autoridad_id = form.autoridad.data  # Select2
+        pen_expediente.juez_id = form.juez.data  # Select2
+        pen_expediente.secretario_id = form.secretario.data  # Select2
+        pen_expediente.agente_mp_id = form.agente_mp.data  # Select2
         pen_expediente.delitos = safe_string(form.delitos.data)
         pen_expediente.save()
         bitacora = Bitacora(
@@ -153,6 +159,12 @@ def edit(pen_expediente_id):
         bitacora.save()
         flash(bitacora.descripcion, "success")
         return redirect(bitacora.url)
+    form.expediente.data = pen_expediente.expediente
+    form.fecha.data = pen_expediente.fecha
+    form.autoridad.data = pen_expediente.autoridad_id  # Select2
+    form.juez.data = pen_expediente.juez_id  # Select2
+    form.secretario.data = pen_expediente.secretario_id  # Select2
+    form.agente_mp.data = pen_expediente.agente_mp_id  # Select2
     form.delitos.data = pen_expediente.delitos
     return render_template("pen_expedientes/edit.jinja2", form=form, pen_expediente=pen_expediente)
 

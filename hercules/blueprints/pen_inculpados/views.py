@@ -9,6 +9,7 @@ from flask_login import current_user, login_required
 
 from hercules.blueprints.bitacoras.models import Bitacora
 from hercules.blueprints.modulos.models import Modulo
+from hercules.blueprints.pen_inculpados.forms import PenInculpadoForm
 from hercules.blueprints.pen_inculpados.models import PenInculpado
 from hercules.blueprints.permisos.models import Permiso
 from hercules.blueprints.usuarios.decorators import permission_required
@@ -97,3 +98,101 @@ def detail(pen_inculpado_id):
     """Detalle de un Inculpado"""
     pen_inculpado = PenInculpado.query.get_or_404(pen_inculpado_id)
     return render_template("pen_inculpados/detail.jinja2", pen_inculpado=pen_inculpado)
+
+
+@pen_inculpados.route("/pen_inculpados/nuevo", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.CREAR)
+def new():
+    """Nuevo Inculpado"""
+    form = PenInculpadoForm()
+    if form.validate_on_submit():
+        pen_inculpado = PenInculpado(
+            nombres=safe_string(form.nombres.data, save_enie=True),
+            apellido_paterno=safe_string(form.apellido_paterno.data, save_enie=True),
+            apellido_materno=safe_string(form.apellido_materno.data, save_enie=True),
+            apodo=safe_string(form.apodo.data, save_enie=True),
+            sexo=form.sexo.data,
+            estado=safe_string(form.estado.data, save_enie=True),
+            solicitud_mp=safe_string(form.solicitud_mp.data, save_enie=True),
+        )
+        pen_inculpado.save()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Nuevo Inculpado {pen_inculpado.nombres}"),
+            url=url_for("pen_inculpados.detail", pen_inculpado_id=pen_inculpado.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(bitacora.url)
+    return render_template("pen_inculpados/new.jinja2", form=form)
+
+
+@pen_inculpados.route("/pen_inculpados/edicion/<int:pen_inculpado_id>", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.MODIFICAR)
+def edit(pen_inculpado_id):
+    """Editar Inculpado"""
+    pen_inculpado = PenInculpado.query.get_or_404(pen_inculpado_id)
+    form = PenInculpadoForm()
+    if form.validate_on_submit():
+        pen_inculpado.nombres = safe_string(form.nombres.data, save_enie=True)
+        pen_inculpado.apellido_paterno = safe_string(form.apellido_paterno.data, save_enie=True)
+        pen_inculpado.apellido_materno = safe_string(form.apellido_materno.data, save_enie=True)
+        pen_inculpado.apodo = safe_string(form.apodo.data, save_enie=True)
+        pen_inculpado.sexo = form.sexo.data
+        pen_inculpado.estado = safe_string(form.estado.data, save_enie=True)
+        pen_inculpado.solicitud_mp = safe_string(form.solicitud_mp.data, save_enie=True)
+        pen_inculpado.save()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Editado Inculpado {pen_inculpado.nombres}"),
+            url=url_for("pen_inculpados.detail", pen_inculpado_id=pen_inculpado.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(bitacora.url)
+    form.nombres.data = pen_inculpado.nombres
+    form.apellido_paterno.data = pen_inculpado.apellido_paterno
+    form.apellido_materno.data = pen_inculpado.apellido_materno
+    form.apodo.data = pen_inculpado.apodo
+    form.sexo.data = pen_inculpado.sexo
+    form.estado.data = pen_inculpado.estado
+    form.solicitud_mp.data = pen_inculpado.solicitud_mp
+    return render_template("pen_inculpados/edit.jinja2", form=form, pen_inculpado=pen_inculpado)
+
+
+@pen_inculpados.route("/pen_inculpados/eliminar/<int:pen_inculpado_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def delete(pen_inculpado_id):
+    """Eliminar Inculpado"""
+    pen_inculpado = PenInculpado.query.get_or_404(pen_inculpado_id)
+    if pen_inculpado.estatus == "A":
+        pen_inculpado.delete()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Eliminado Inculpado {pen_inculpado.nombre}"),
+            url=url_for("pen_inculpados.detail", pen_inculpado_id=pen_inculpado.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("pen_inculpados.detail", pen_inculpado_id=pen_inculpado.id))
+
+
+@pen_inculpados.route("/pen_inculpados/recuperar/<int:pen_inculpado_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def recover(pen_inculpado_id):
+    """Recuperar Inculpado"""
+    pen_inculpado = PenInculpado.query.get_or_404(pen_inculpado_id)
+    if pen_inculpado.estatus == "B":
+        pen_inculpado.recover()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Recuperado Inculpado {pen_inculpado.nombre}"),
+            url=url_for("pen_inculpados.detail", pen_inculpado_id=pen_inculpado.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("pen_inculpados.detail", pen_inculpado_id=pen_inculpado.id))

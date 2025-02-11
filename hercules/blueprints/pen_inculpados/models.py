@@ -37,6 +37,11 @@ class PenInculpado(database.Model, UniversalMixin):
     estado: Mapped[str] = mapped_column(String(256))
     solicitud_mp: Mapped[str] = mapped_column(String(256))
 
+    @property
+    def nombre(self):
+        """Nombre completo"""
+        return f"{self.nombres} {self.apellido_paterno} {self.apellido_materno}"
+
     def __repr__(self):
         """Representación"""
         return f"<PenInculpado {self.id}>"

@@ -1,0 +1,25 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/form.jinja2' as f with context %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Editar Inculpado {{ pen_inculpado.nombre }}{% endblock %}
+
+{% block topbar_actions %}
+    {{ topbar.page('Editar ' + pen_inculpado.nombre) }}
+{% endblock %}
+
+{% block content %}
+    {% call f.card() %}
+        {% set form_kwargs = {'pen_inculpado_id': pen_inculpado.id} %}
+        {% call f.form_tag('pen_inculpados.edit', fid='pen_inculpado_form', **form_kwargs) %}
+            {% call f.form_group(form.nombres) %}{% endcall %}
+            {% call f.form_group(form.apellido_paterno) %}{% endcall %}
+            {% call f.form_group(form.apellido_materno) %}{% endcall %}
+            {% call f.form_group(form.apodo) %}{% endcall %}
+            {% call f.form_group(form.sexo) %}{% endcall %}
+            {% call f.form_group(form.estado) %}{% endcall %}
+            {% call f.form_group(form.solicitud_mp) %}{% endcall %}
+            {% call f.form_group(form.guardar) %}{% endcall %}
+        {% endcall %}
+    {% endcall %}
+{% endblock %}
