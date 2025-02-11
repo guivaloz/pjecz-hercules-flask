@@ -4,6 +4,12 @@
 
 {% block title %}Editar Expediente {{ pen_expediente.expediente }}{% endblock %}
 
+{% block custom_head %}
+    <!-- Select2 -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://storage.googleapis.com/pjecz-informatica/static/css/select2.css" rel="stylesheet" />
+{% endblock %}
+
 {% block topbar_actions %}
     {{ topbar.page('Editar ' + pen_expediente.expediente) }}
 {% endblock %}
@@ -14,11 +20,10 @@
         {% call f.form_tag('pen_expedientes.edit', fid='pen_expediente_form', **form_kwargs) %}
             {% call f.form_group(form.expediente) %}{% endcall %}
             {% call f.form_group(form.fecha) %}{% endcall %}
-            {% call f.form_group(form.distrito) %}{% endcall %}
             {% call f.form_group(form.autoridad) %}{% endcall %}
-            {% call f.form_group(form.juez) %}{% endcall %}
-            {% call f.form_group(form.secretario) %}{% endcall %}
-            {% call f.form_group(form.agente_mp) %}{% endcall %}
+            {% call f.form_group(form.pen_juez) %}{% endcall %}
+            {% call f.form_group(form.pen_secretario) %}{% endcall %}
+            {% call f.form_group(form.pen_agente_mp) %}{% endcall %}
             {% call f.form_group(form.delitos) %}{% endcall %}
             {% call f.form_group(form.guardar) %}{% endcall %}
         {% endcall %}
@@ -26,5 +31,103 @@
 {% endblock %}
 
 {% block custom_javascript %}
-    {{ f.js_select_distrito_autoridad(distritos, autoridades, mi_distrito=distrito_no_definido.id, mi_autoridad=autoridad_no_definido.id) }}
+    <!-- Select2 -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        // Cuando esté listo el DOM
+        $(document).ready(function(){
+            // Preparar Select2 para autoridad
+            $('#autoridad').select2({
+                placeholder: {id: "", text: ""},
+                allowClear: true,
+                minimumInputLength: 3,
+                ajax: {
+                    url: '/autoridades/select2_json',
+                    headers: { "X-CSRF-TOKEN": "{{ csrf_token() }}" },
+                    dataType: 'json',
+                    delay: 250,
+                    type: "POST",
+                    data: function (params) {
+                        return { 'searchString': params.term }
+                    }
+                }
+            });
+            // Agregar el valor (actual del registro) a autoridad
+            let dataAutoridad = {
+                id: {{ pen_expediente.autoridad_id }},
+                text: "{{ pen_expediente.autoridad.clave }}: {{ pen_expediente.autoridad.descripcion_corta }}"
+            };
+            let newAutoridadOption = new Option(dataAutoridad.text, dataAutoridad.id, true, true);
+            $('#autoridad').append(newAutoridadOption).trigger('change');
+            // Preparar Select2 para pen_juez
+            $('#pen_juez').select2({
+                placeholder: {id: "", text: ""},
+                allowClear: true,
+                minimumInputLength: 3,
+                ajax: {
+                    url: '/pen_jueces/select2_json',
+                    headers: { "X-CSRF-TOKEN": "{{ csrf_token() }}" },
+                    dataType: 'json',
+                    delay: 250,
+                    type: "POST",
+                    data: function (params) {
+                        return { 'searchString': params.term }
+                    }
+                }
+            });
+            // Agregar el valor (actual del registro) a pen_juez
+            let dataPenJuez = {
+                id: {{ pen_expediente.pen_juez_id }},
+                text: "{{ pen_expediente.pen_juez.nombre }}"
+            };
+            let newPenJuezOption = new Option(dataPenJuez.text, dataPenJuez.id, true, true);
+            $('#pen_juez').append(newPenJuezOption).trigger('change');
+            // Preparar Select2 para pen_secretario
+            $('#pen_secretario').select2({
+                placeholder: {id: "", text: ""},
+                allowClear: true,
+                minimumInputLength: 3,
+                ajax: {
+                    url: '/pen_secretarios/select2_json',
+                    headers: { "X-CSRF-TOKEN": "{{ csrf_token() }}" },
+                    dataType: 'json',
+                    delay: 250,
+                    type: "POST",
+                    data: function (params) {
+                        return { 'searchString': params.term }
+                    }
+                }
+            });
+            // Agregar el valor (actual del registro) a pen_secretario
+            let dataPenSecretario = {
+                id: {{ pen_expediente.pen_secretario_id }},
+                text: "{{ pen_expediente.pen_secretario.nombre }}"
+            };
+            let newPenSecretarioOption = new Option(dataPenSecretario.text, dataPenSecretario.id, true, true);
+            $('#pen_secretario').append(newPenSecretarioOption).trigger('change');
+            // Preparar Select2 para pen_agente_mp
+            $('#pen_agente_mp').select2({
+                placeholder: {id: "", text: ""},
+                allowClear: true,
+                minimumInputLength: 3,
+                ajax: {
+                    url: '/pen_agentes_mp/select2_json',
+                    headers: { "X-CSRF-TOKEN": "{{ csrf_token() }}" },
+                    dataType: 'json',
+                    delay: 250,
+                    type: "POST",
+                    data: function (params) {
+                        return { 'searchString': params.term }
+                    }
+                }
+            });
+            // Agregar el valor (actual del registro) a pen_agente_mp
+            let dataPenAgenteMP = {
+                id: {{ pen_expediente.pen_agente_mp_id }},
+                text: "{{ pen_expediente.pen_agente_mp.nombre }}"
+            };
+            let newPenAgenteMPOption = new Option(dataPenAgenteMP.text, dataPenAgenteMP.id, true, true);
+            $('#pen_agente_mp').append(newPenAgenteMPOption).trigger('change');
+        });
+    </script>
 {% endblock %}

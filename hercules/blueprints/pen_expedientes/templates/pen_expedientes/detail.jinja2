@@ -22,10 +22,26 @@
     {% call detail.card(estatus=pen_expediente.estatus) %}
         {{ detail.label_value('Expediente', pen_expediente.expediente) }}
         {{ detail.label_value('Fecha', pen_expediente.fecha) }}
-        {{ detail.label_value('Juzgado', pen_expediente.autoridad.descripcion_corta) }}
-        {{ detail.label_value('Agente MP', pen_expediente.pen_agente_mp.nombre) }}
-        {{ detail.label_value('Juez', pen_expediente.pen_juez.nombre) }}
-        {{ detail.label_value('Secretario', pen_expediente.pen_secretario.nombre) }}
+        {% if current_user.can_view('AUTORIDADES') %}
+            {{ detail.label_value('Juzgado', pen_expediente.autoridad.descripcion_corta, url_for('autoridades.detail', autoridad_id=pen_expediente.autoridad_id)) }}
+        {% else %}
+            {{ detail.label_value('Juzgado', pen_expediente.autoridad.descripcion_corta) }}
+        {% endif %}
+        {% if current_user.can_view('PEN AGENTES MP') %}
+            {{ detail.label_value('Agente MP', pen_expediente.pen_agente_mp.nombre, url_for('pen_agentes_mp.detail', pen_agente_mp_id=pen_expediente.pen_agente_mp_id)) }}
+        {% else %}
+            {{ detail.label_value('Agente MP', pen_expediente.pen_agente_mp.nombre) }}
+        {% endif %}
+        {% if current_user.can_view('PEN JUECES') %}
+            {{ detail.label_value('Juez', pen_expediente.pen_juez.nombre, url_for('pen_jueces.detail', pen_juez_id=pen_expediente.pen_juez_id)) }}
+        {% else %}
+            {{ detail.label_value('Juez', pen_expediente.pen_juez.nombre) }}
+        {% endif %}
+        {% if current_user.can_view('PEN SECRETARIOS') %}
+            {{ detail.label_value('Secretario', pen_expediente.pen_secretario.nombre, url_for('pen_secretarios.detail', pen_secretario_id=pen_expediente.pen_secretario_id)) }}
+        {% else %}
+            {{ detail.label_value('Secretario', pen_expediente.pen_secretario.nombre) }}
+        {% endif %}
         {{ detail.label_value('Delitos', pen_expediente.delitos) }}
     {% endcall %}
 {% endblock %}

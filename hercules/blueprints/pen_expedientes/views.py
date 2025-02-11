@@ -109,9 +109,9 @@ def new():
         expediente = safe_expediente(form.expediente.data)
         fecha = form.fecha.data
         autoridad_id = form.autoridad.data  # Select2
-        pen_juez_id = form.juez.data  # Select2
-        pen_secretario_id = form.secretario.data  # Select2
-        pen_agente_mp_id = form.agente_mp.data  # Select2
+        pen_juez_id = form.pen_juez.data  # Select2
+        pen_secretario_id = form.pen_secretario.data  # Select2
+        pen_agente_mp_id = form.pen_agente_mp.data  # Select2
         delitos = safe_string(form.delitos.data, save_enie=True)
         pen_expediente = PenExpediente(
             expediente=expediente,
@@ -145,9 +145,9 @@ def edit(pen_expediente_id):
         pen_expediente.expediente = safe_expediente(form.expediente.data)
         pen_expediente.fecha = form.fecha.data
         pen_expediente.autoridad_id = form.autoridad.data  # Select2
-        pen_expediente.juez_id = form.juez.data  # Select2
-        pen_expediente.secretario_id = form.secretario.data  # Select2
-        pen_expediente.agente_mp_id = form.agente_mp.data  # Select2
+        pen_expediente.pen_juez_id = form.pen_juez.data  # Select2
+        pen_expediente.pen_secretario_id = form.pen_secretario.data  # Select2
+        pen_expediente.pen_agente_mp_id = form.pen_agente_mp.data  # Select2
         pen_expediente.delitos = safe_string(form.delitos.data)
         pen_expediente.save()
         bitacora = Bitacora(
@@ -162,9 +162,9 @@ def edit(pen_expediente_id):
     form.expediente.data = pen_expediente.expediente
     form.fecha.data = pen_expediente.fecha
     form.autoridad.data = pen_expediente.autoridad_id  # Select2
-    form.juez.data = pen_expediente.juez_id  # Select2
-    form.secretario.data = pen_expediente.secretario_id  # Select2
-    form.agente_mp.data = pen_expediente.agente_mp_id  # Select2
+    form.pen_juez.data = pen_expediente.pen_juez_id  # Select2
+    form.pen_secretario.data = pen_expediente.pen_secretario_id  # Select2
+    form.pen_agente_mp.data = pen_expediente.pen_agente_mp_id  # Select2
     form.delitos.data = pen_expediente.delitos
     return render_template("pen_expedientes/edit.jinja2", form=form, pen_expediente=pen_expediente)
 
