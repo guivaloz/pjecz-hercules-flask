@@ -40,12 +40,20 @@ def datatable_json():
         consulta = consulta.filter_by(estatus=request.form["estatus"])
     else:
         consulta = consulta.filter_by(estatus="A")
-    # if "persona_id" in request.form:
-    #     consulta = consulta.filter_by(persona_id=request.form["persona_id"])
-    # Luego filtrar por columnas de otras tablas
-    # if "persona_rfc" in request.form:
-    #     consulta = consulta.join(Persona)
-    #     consulta = consulta.filter(Persona.rfc.contains(safe_rfc(request.form["persona_rfc"], search_fragment=True)))
+    if "pen_expediente_id" in request.form:
+        consulta = consulta.filter_by(pen_expediente_id=request.form["pen_expediente_id"])
+    if "nombres" in request.form:
+        nombres = safe_string(request.form["nombres"], save_enie=True)
+        if nombres != "":
+            consulta = consulta.filter(PenInculpado.nombres.contains(nombres))
+    if "apellido_paterno" in request.form:
+        apellido_paterno = safe_string(request.form["apellido_paterno"], save_enie=True)
+        if apellido_paterno != "":
+            consulta = consulta.filter(PenInculpado.apellido_paterno.contains(apellido_paterno))
+    if "apellido_materno" in request.form:
+        apellido_materno = safe_string(request.form["apellido_materno"], save_enie=True)
+        if apellido_materno != "":
+            consulta = consulta.filter(PenInculpado.apellido_materno.contains(apellido_materno))
     # Ordenar y paginar
     registros = consulta.order_by(PenInculpado.id).offset(start).limit(rows_per_page).all()
     total = consulta.count()
@@ -56,11 +64,9 @@ def datatable_json():
             {
                 "expediente": resultado.pen_expediente.expediente,
                 "detalle": {
-                    "nombres": resultado.nombres,
+                    "nombre": resultado.nombre,
                     "url": url_for("pen_inculpados.detail", pen_inculpado_id=resultado.id),
                 },
-                "apellido_paterno": resultado.apellido_paterno,
-                "apellido_materno": resultado.apellido_materno,
                 "apodo": resultado.apodo,
                 "sexo": resultado.sexo,
                 "estado": resultado.estado,
@@ -100,9 +106,9 @@ def detail(pen_inculpado_id):
     return render_template("pen_inculpados/detail.jinja2", pen_inculpado=pen_inculpado)
 
 
-@pen_inculpados.route("/pen_inculpados/nuevo", methods=["GET", "POST"])
+@pen_inculpados.route("/pen_inculpados/nuevo/<int:pen_expediente_id>", methods=["GET", "POST"])
 @permission_required(MODULO, Permiso.CREAR)
-def new():
+def new(pen_expediente_id):
     """Nuevo Inculpado"""
     form = PenInculpadoForm()
     if form.validate_on_submit():

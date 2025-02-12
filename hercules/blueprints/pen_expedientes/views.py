@@ -42,12 +42,17 @@ def datatable_json():
         consulta = consulta.filter_by(estatus=request.form["estatus"])
     else:
         consulta = consulta.filter_by(estatus="A")
-    # if "persona_id" in request.form:
-    #     consulta = consulta.filter_by(persona_id=request.form["persona_id"])
-    # Luego filtrar por columnas de otras tablas
-    # if "persona_rfc" in request.form:
-    #     consulta = consulta.join(Persona)
-    #     consulta = consulta.filter(Persona.rfc.contains(safe_rfc(request.form["persona_rfc"], search_fragment=True)))
+    if "autoridad_id" in request.form:
+        consulta = consulta.filter_by(autoridad_id=request.form["autoridad_id"])
+    elif "autoridad_clave" in request.form:
+        consulta = consulta.join(Autoridad)
+        consulta = consulta.filter(Autoridad.clave.contains(request.form["autoridad_clave"]))
+    if "pen_agente_mp_id" in request.form:
+        consulta = consulta.filter_by(pen_agente_mp_id=request.form["pen_agente_mp_id"])
+    if "pen_juez_id" in request.form:
+        consulta = consulta.filter_by(pen_juez_id=request.form["pen_juez_id"])
+    if "pen_secretario_id" in request.form:
+        consulta = consulta.filter_by(pen_secretario_id=request.form["pen_secretario_id"])
     # Ordenar y paginar
     registros = consulta.order_by(PenExpediente.id).offset(start).limit(rows_per_page).all()
     total = consulta.count()
@@ -62,6 +67,7 @@ def datatable_json():
                 },
                 "fecha": resultado.fecha.strftime("%Y-%m-%d"),
                 "autoridad_clave": resultado.autoridad.clave,
+                "pen_agente_mp": resultado.pen_agente_mp.nombre,
                 "pen_juez_nombre": resultado.pen_juez.nombre,
                 "pen_secretario_nombre": resultado.pen_secretario.nombre,
             }

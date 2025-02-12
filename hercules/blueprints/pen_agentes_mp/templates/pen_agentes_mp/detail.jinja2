@@ -22,11 +22,62 @@
     {% call detail.card(estatus=pen_agente_mp.estatus) %}
         {{ detail.label_value('Nombre', pen_agente_mp.nombre) }}
     {% endcall %}
+    {% if current_user.can_view('PEN EXPEDIENTES') %}
+        {% call detail.card('Expedientes') %}
+            <table id="pen_expedientes_datatable" class="table display nowrap" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Juzgado</th>
+                        <th>Expediente</th>
+                        <th>Fecha</th>
+                        <th>Juez</th>
+                        <th>Secretario</th>
+                    </tr>
+                </thead>
+            </table>
+        {% endcall %}
+    {% endif %}
 {% endblock %}
 
 {% block custom_javascript %}
     {% if current_user.can_admin('PEN AGENTES MP') %}
         {% if pen_agente_mp.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + pen_agente_mp.nombre + '?') }}{% endif %}
         {% if pen_agente_mp.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + pen_agente_mp.nombre + '?') }}{% endif %}
+    {% endif %}
+    <!-- Constructor de DataTables -->
+    <script src="/static/js/datatables-constructor.js"></script>
+    <script src="/static/js/datatables-filtros.js"></script>
+    <script>
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+    </script>
+    <!-- Expedientes del Agente MP -->
+    {% if current_user.can_view('PEN EXPEDIENTES') %}
+        <script>
+            // DataTable Expedientes
+            let configDTPenExpedientes = constructorDataTable.config();
+            configDTPenExpedientes['ajax']['url'] = '/pen_expedientes/datatable_json';
+            configDTPenExpedientes['ajax']['data'] = { estatus: "A", pen_agente_mp_id: {{ pen_agente_mp.id}} };
+            configDTPenExpedientes['columns'] = [
+                { data: 'autoridad_clave' },
+                { data: 'detalle' },
+                { data: 'fecha' },
+                { data: 'pen_juez_nombre' },
+                { data: 'pen_secretario_nombre' }
+            ];
+            configDTPenExpedientes['columnDefs'] = [
+                {
+                    targets: 1, // detalle
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return '<a href="' + data.url + '">' + data.expediente + '</a>';
+                    }
+                }
+            ];
+            // Filtros Expedientes
+            const filtrosPenExpedientes = new FiltrosDataTable('#pen_expedientes_datatable', configDTPenExpedientes);
+            //filtrosPenExpedientes.agregarInput('filtroParametroUno', 'parametro_uno');
+            //filtrosPenExpedientes.agregarInput('filtroParametroDos', 'parametro_dos');
+            filtrosPenExpedientes.precargar();
+        </script>
     {% endif %}
 {% endblock %}

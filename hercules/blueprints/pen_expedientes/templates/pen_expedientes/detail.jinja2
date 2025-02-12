@@ -28,9 +28,9 @@
             {{ detail.label_value('Juzgado', pen_expediente.autoridad.descripcion_corta) }}
         {% endif %}
         {% if current_user.can_view('PEN AGENTES MP') %}
-            {{ detail.label_value('Agente MP', pen_expediente.pen_agente_mp.nombre, url_for('pen_agentes_mp.detail', pen_agente_mp_id=pen_expediente.pen_agente_mp_id)) }}
+            {{ detail.label_value('Agente M.P.', pen_expediente.pen_agente_mp.nombre, url_for('pen_agentes_mp.detail', pen_agente_mp_id=pen_expediente.pen_agente_mp_id)) }}
         {% else %}
-            {{ detail.label_value('Agente MP', pen_expediente.pen_agente_mp.nombre) }}
+            {{ detail.label_value('Agente M.P.', pen_expediente.pen_agente_mp.nombre) }}
         {% endif %}
         {% if current_user.can_view('PEN JUECES') %}
             {{ detail.label_value('Juez', pen_expediente.pen_juez.nombre, url_for('pen_jueces.detail', pen_juez_id=pen_expediente.pen_juez_id)) }}
@@ -44,11 +44,60 @@
         {% endif %}
         {{ detail.label_value('Delitos', pen_expediente.delitos) }}
     {% endcall %}
+    {% if current_user.can_view('PEN INCULPADOS') %}
+        {% call detail.card('Inculpados') %}
+            <table id="pen_inculpados_datatable" class="table display nowrap" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Nombre completo</th>
+                        <th>Apodo</th>
+                        <th>Sexo</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+            </table>
+        {% endcall %}
+    {% endif %}
 {% endblock %}
 
 {% block custom_javascript %}
     {% if current_user.can_admin('PEN EXPEDIENTES') %}
         {% if pen_expediente.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + pen_expediente.expediente + '?') }}{% endif %}
         {% if pen_expediente.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + pen_expediente.expediente + '?') }}{% endif %}
+    {% endif %}
+    <!-- Constructor de DataTables -->
+    <script src="/static/js/datatables-constructor.js"></script>
+    <script src="/static/js/datatables-filtros.js"></script>
+    <script>
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+    </script>
+    <!-- Inculpados de la Expediente -->
+    {% if current_user.can_view('PEN INCULPADOS') %}
+        <script>
+            // DataTable Inculpados
+            let configDTPenInculpados = constructorDataTable.config();
+            configDTPenInculpados['ajax']['url'] = '/pen_inculpados/datatable_json';
+            configDTPenInculpados['ajax']['data'] = { estatus: "A", pen_expediente_id: {{ pen_expediente.id}} };
+            configDTPenInculpados['columns'] = [
+                { data: 'detalle' },
+                { data: 'apodo' },
+                { data: 'sexo' },
+                { data: 'estado' }
+            ];
+            configDTPenInculpados['columnDefs'] = [
+                {
+                    targets: 0, // detalle
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return '<a href="' + data.url + '">' + data.nombre + '</a>';
+                    }
+                }
+            ];
+            // Filtros Inculpados
+            const filtrosPenInculpados = new FiltrosDataTable('#pen_inculpados_datatable', configDTPenInculpados);
+            //filtrosPenInculpados.agregarInput('filtroParametroUno', 'parametro_uno');
+            //filtrosPenInculpados.agregarInput('filtroParametroDos', 'parametro_dos');
+            filtrosPenInculpados.precargar();
+        </script>
     {% endif %}
 {% endblock %}
