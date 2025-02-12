@@ -9,6 +9,7 @@ from flask_login import current_user, login_required
 
 from hercules.blueprints.bitacoras.models import Bitacora
 from hercules.blueprints.modulos.models import Modulo
+from hercules.blueprints.pen_expedientes.models import PenExpediente
 from hercules.blueprints.pen_inculpados.forms import PenInculpadoForm
 from hercules.blueprints.pen_inculpados.models import PenInculpado
 from hercules.blueprints.permisos.models import Permiso
@@ -110,9 +111,12 @@ def detail(pen_inculpado_id):
 @permission_required(MODULO, Permiso.CREAR)
 def new(pen_expediente_id):
     """Nuevo Inculpado"""
+    pen_expediente = PenExpediente.query.get_or_404(pen_expediente_id)
     form = PenInculpadoForm()
     if form.validate_on_submit():
+        # Guardar
         pen_inculpado = PenInculpado(
+            pen_expediente_id=pen_expediente.id,
             nombres=safe_string(form.nombres.data, save_enie=True),
             apellido_paterno=safe_string(form.apellido_paterno.data, save_enie=True),
             apellido_materno=safe_string(form.apellido_materno.data, save_enie=True),
@@ -122,6 +126,7 @@ def new(pen_expediente_id):
             solicitud_mp=safe_string(form.solicitud_mp.data, save_enie=True),
         )
         pen_inculpado.save()
+        # Guardar bitácora
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
             usuario=current_user,
@@ -129,9 +134,10 @@ def new(pen_expediente_id):
             url=url_for("pen_inculpados.detail", pen_inculpado_id=pen_inculpado.id),
         )
         bitacora.save()
+        # Entregar detalle
         flash(bitacora.descripcion, "success")
         return redirect(bitacora.url)
-    return render_template("pen_inculpados/new.jinja2", form=form)
+    return render_template("pen_inculpados/new.jinja2", form=form, pen_expediente=pen_expediente)
 
 
 @pen_inculpados.route("/pen_inculpados/edicion/<int:pen_inculpado_id>", methods=["GET", "POST"])

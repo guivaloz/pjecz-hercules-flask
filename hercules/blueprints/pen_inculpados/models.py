@@ -15,7 +15,7 @@ class PenInculpado(database.Model, UniversalMixin):
     SEXOS = {
         "M": "MASCULINO",
         "F": "FEMENINO",
-        "-": "SIN SEXO",
+        "X": "NO BINARIO",
     }
 
     # Nombre de la tabla
