@@ -30,7 +30,7 @@ def alimentar_autoridades():
     try:
         distrito_nd = Distrito.query.filter_by(clave="ND").one()
         materia_nd = Materia.query.filter_by(clave="ND").one()
-        municipio_nd = Municipio.query.filter_by(clave="ND").one()
+        municipio_default = Municipio.query.filter_by(estado_id=5, clave="030").one()  # Coahuila de Zaragoza, Saltillo
     except (MultipleResultsFound, NoResultFound):
         click.echo("AVISO: No se encontró el distrito, materia y/o municipio 'ND'.")
         sys.exit(1)
@@ -46,7 +46,7 @@ def alimentar_autoridades():
                 Autoridad(
                     distrito_id=distrito_nd.id,
                     materia_id=materia_nd.id,
-                    municipio_id=municipio_nd.id,
+                    municipio_id=municipio_default.id,
                     clave=f"NE-{contador}",
                     descripcion="NO EXISTE",
                     descripcion_corta="NO EXISTE",

@@ -41,9 +41,11 @@ def alimentar_usuarios():
         rows = csv.DictReader(puntero)
         for row in rows:
             # Si usuario_id NO es consecutivo, se inserta un usuario "NO EXISTE"
-            contador += 1
-            usuario_id = int(row["usuario_id"])
-            if usuario_id != contador:
+            while True:
+                contador += 1
+                usuario_id = int(row["usuario_id"])
+                if usuario_id == contador:
+                    break
                 Usuario(
                     autoridad_id=autoridad_nd.id,
                     oficina_id=oficina_nd.id,
@@ -59,8 +61,7 @@ def alimentar_usuarios():
                     api_key_expiracion=datetime(year=2000, month=1, day=1),
                     contrasena=pwd_context.hash(generar_contrasena()),
                 ).save()
-                click.echo(click.style("!", fg="yellow"), nl=False)
-                continue
+                click.echo(click.style("0", fg="blue"), nl=False)
             autoridad_clave = safe_clave(row["autoridad_clave"])
             oficina_id = int(row["oficina_id"])
             email = safe_email(row["email"])
