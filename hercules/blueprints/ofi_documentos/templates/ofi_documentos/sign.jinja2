@@ -10,7 +10,32 @@
 {% endblock %}
 
 {% block topbar_actions %}
-    {{ topbar.page('Firmar Oficio ' + ofi_documento.descripcion | truncate(48)) }}
+    {% call topbar.page_buttons('Firmar ' + ofi_documento.descripcion | truncate(32)) %}
+        {{ topbar.button('Ver en Monitor', url_for('ofi_documentos.fullscreen', ofi_documento_id=ofi_documento.id), "mdi:monitor") }}
+        {{ topbar.button('Ver en Celular', url_for('ofi_documentos.detail', ofi_documento_id=ofi_documento.id), "mdi:cellphone") }}
+        {{ topbar.button('Mi Bandeja de Entrada', url_for('ofi_documentos.list_active_mi_bandeja_entrada'), "mdi:inbox-multiple") }}
+        {% if mostrar_boton_mis_oficios %}
+            {{ topbar.button_previous('Mis Oficios', url_for('ofi_documentos.list_active_mis_oficios')) }}
+        {% endif %}
+        {% if mostrar_boton_mi_autoridad %}
+            {{ topbar.button('Mi Autoridad', url_for('ofi_documentos.list_active_mi_autoridad'), "mdi:scale-balance") }}
+        {% endif %}
+        {% if current_user.can_admin('OFI DOCUMENTOS') %}
+            {{ topbar.button('Administrar', url_for('ofi_documentos.list_active_admin'), "mdi:folder") }}
+        {% endif %}
+        {% if current_user.can_admin('OFI PLANTILLAS') %}
+            {{ topbar.button('Plantillas', url_for('ofi_plantillas.list_active'), "mdi:note-multiple") }}
+        {% endif %}
+        {% if current_user.can_edit('OFI DOCUMENTOS') %}
+            {% if mostrar_boton_editar and ofi_documento.estado == "BORRADOR" and not ofi_documento.esta_cancelado %}
+                {{ topbar.button_edit('Editar', url_for('ofi_documentos.edit', ofi_documento_id=ofi_documento.id)) }}
+            {% endif %}
+        {% endif %}
+        {% if current_user.can_admin('OFI DOCUMENTOS') %}
+            {% if ofi_documento.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('ofi_documentos.delete', ofi_documento_id=ofi_documento.id)) }}{% endif %}
+            {% if ofi_documento.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('ofi_documentos.recover', ofi_documento_id=ofi_documento.id)) }}{% endif %}
+        {% endif %}
+    {% endcall %}
 {% endblock %}
 
 {% block content %}

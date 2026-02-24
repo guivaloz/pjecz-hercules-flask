@@ -18,7 +18,7 @@
 
 {% block topbar_actions %}
     {% call topbar.page_buttons('Oficio ' + ofi_documento.descripcion | truncate(32)) %}
-        {{ topbar.button('Ver a Pantalla Pequeña', url_for('ofi_documentos.detail', ofi_documento_id=ofi_documento.id), "mdi:cellphone") }}
+        {{ topbar.button('Ver en Celular', url_for('ofi_documentos.detail', ofi_documento_id=ofi_documento.id), "mdi:cellphone") }}
         {{ topbar.button('Mi Bandeja de Entrada', url_for('ofi_documentos.list_active_mi_bandeja_entrada'), "mdi:inbox-multiple") }}
         {% if mostrar_boton_mis_oficios %}
             {{ topbar.button_previous('Mis Oficios', url_for('ofi_documentos.list_active_mis_oficios')) }}
@@ -44,10 +44,10 @@
 
 {% block content %}
     <div class="row h-100">
-        <div class="col-md-8 h-100">
+        <div class="col-md-8 h-100 mb-2">
             <iframe id="iframe1" src="{{ url_for('ofi_documentos.fullscreen_document', ofi_documento_id=ofi_documento.id) }}" width="100%" height="100%" frameborder="0"></iframe>
         </div>
-        <div class="col-md-4 h-100">
+        <div class="col-md-4 h-100 mb-2">
             <iframe id="iframe2" src="{{ url_for('ofi_documentos.fullscreen_attachments', ofi_documento_id=ofi_documento.id) }}" width="100%" height="49%" frameborder="0"></iframe>
             <iframe id="iframe3" src="{{ url_for('ofi_documentos.fullscreen_recipients', ofi_documento_id=ofi_documento.id) }}" width="100%" height="49%" frameborder="0"></iframe>
         </div>

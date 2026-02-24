@@ -4,6 +4,7 @@ Ofi Documentos, vistas
 
 from datetime import datetime
 import json
+import re
 
 from flask import Blueprint, current_app, flash, make_response, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
@@ -55,6 +56,21 @@ SAFE_ATTRS = [
     "alt",        # for img
     "title",      # for img
     "height",     # for img
+]
+SAFE_CLASSES = [
+    "table layout-table",
+    "table layout-table ck-table-resized",
+]
+SAFE_STYLES_REGEXP = [
+    r"margin-bottom:[\d]+px;",
+    r"margin:0 auto;",
+    r"text-align:center;",
+    r"text-align:left;",
+    r"text-align:right;",
+    r"vertical-align:bottom;",
+    r"vertical-align:center;",
+    r"vertical-align:top;",
+    r"width:[\d]+%;",
 ]
 cleaner = Cleaner(
     style=False,
@@ -613,6 +629,23 @@ def new(ofi_plantilla_id):
             if ofi_documento_responder is None:
                 flash("El oficio cadena no existe", "warning")
                 es_valido = False
+        # Tomar el contenido HTML
+        contenido_html = str(form.contenido_html.data).strip()
+        # Primero limpiarlo de tags y atributos no permitidos
+        contenido_html = cleaner.clean_html(contenido_html)
+        # Luego procesar cada atributo en styles
+        for style in re.findall(r'style="([^"]*)"', contenido_html):
+            # Filtrar solo los estilos permitidos
+            estilos_permitidos = []
+            for style_regexp in SAFE_STYLES_REGEXP:
+                if re.fullmatch(style_regexp, style.strip()):
+                    estilos_permitidos.append(style.strip())
+            # Reemplazar el atributo style por solo los estilos permitidos
+            if estilos_permitidos:
+                contenido_html = contenido_html.replace(f'style="{style}"', f'style="{"; ".join(estilos_permitidos)}"')
+            else:
+                contenido_html = contenido_html.replace(f'style="{style}"', "")
+        # Si es válido, guardar el nuevo oficio
         if es_valido:
             # Guardar el nuevo oficio
             ofi_documento = OfiDocumento(
@@ -623,7 +656,7 @@ def new(ofi_plantilla_id):
                 folio_num=numero_folio,
                 vencimiento_fecha=vencimiento_fecha,
                 contenido_md=str(form.contenido_md.data).strip(),
-                contenido_html=cleaner.clean_html(str(form.contenido_html.data).strip()),
+                contenido_html=contenido_html,
                 contenido_sfdt=str(form.contenido_sfdt.data).strip(),
                 estado="BORRADOR",
                 cadena_oficio_id=form.cadena_oficio_id.data if form.cadena_oficio_id.data else None,
@@ -818,15 +851,31 @@ def edit(ofi_documento_id):
         if vencimiento_fecha is not None and vencimiento_fecha < datetime.now().date():
             flash("La fecha de vencimiento no puede ser anterior a la fecha actual", "warning")
             es_valido = False
+        # Tomar el contenido HTML
+        contenido_html = str(form.contenido_html.data).strip()
+        # Primero limpiarlo de tags y atributos no permitidos
+        contenido_html = cleaner.clean_html(contenido_html)
+        # Luego procesar cada atributo en styles
+        for style in re.findall(r'style="([^"]*)"', contenido_html):
+            # Filtrar solo los estilos permitidos
+            estilos_permitidos = []
+            for style_regexp in SAFE_STYLES_REGEXP:
+                if re.fullmatch(style_regexp, style.strip()):
+                    estilos_permitidos.append(style.strip())
+            # Reemplazar el atributo style por solo los estilos permitidos
+            if estilos_permitidos:
+                contenido_html = contenido_html.replace(f'style="{style}"', f'style="{"; ".join(estilos_permitidos)}"')
+            else:
+                contenido_html = contenido_html.replace(f'style="{style}"', "")
+        # Si es válido, guardar los cambios
         if es_valido:
-            # Guardar los cambios
             ofi_documento.descripcion = safe_string(form.descripcion.data, save_enie=True)
             ofi_documento.folio = folio
             ofi_documento.folio_anio = anio_folio
             ofi_documento.folio_num = numero_folio
             ofi_documento.vencimiento_fecha = vencimiento_fecha
             ofi_documento.contenido_md = str(form.contenido_md.data).strip()
-            ofi_documento.contenido_html = cleaner.clean_html(str(form.contenido_html.data).strip())
+            ofi_documento.contenido_html = contenido_html
             ofi_documento.contenido_sfdt = ""
             ofi_documento.save()
             bitacora = Bitacora(
