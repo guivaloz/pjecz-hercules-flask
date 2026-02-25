@@ -3,13 +3,12 @@ Ofi Plantillas, vistas
 """
 
 import json
-from flask import Blueprint, current_app, flash, redirect, render_template, request, url_for
+import re
+
+from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
+from lxml.html.clean import Cleaner
 from sqlalchemy import String, cast
-
-
-from lib.datatables import get_datatable_parameters, output_datatable_json
-from lib.safe_string import safe_string, safe_message, safe_uuid, safe_clave
 
 from hercules.blueprints.bitacoras.models import Bitacora
 from hercules.blueprints.modulos.models import Modulo
@@ -19,7 +18,42 @@ from hercules.blueprints.ofi_plantillas.models import OfiPlantilla
 from hercules.blueprints.ofi_plantillas.forms import OfiPlantillaForm
 from hercules.blueprints.usuarios.models import Usuario
 from hercules.blueprints.autoridades.models import Autoridad
+from lib.datatables import get_datatable_parameters, output_datatable_json
+from lib.safe_string import safe_string, safe_message, safe_uuid, safe_clave
 
+# HTML tags y classes permitidos en el contenido de los oficios
+ALLOWED_TAGS = ["b", "i", "u", "em", "strong", "p", "br", "ul", "ol", "li", "div", "h1", "h2", "h3", "h4", "h5", "h6", "table", "thead", "tbody", "tr", "th", "td", "a", "img"]
+SAFE_ATTRS = [
+    "style",      # for p, div, th, td, img
+    "class",      # for table
+    "role",       # for table
+    "border",     # for table
+    "colspan",    # for th, td
+    "rowspan",    # for th, td
+    "width",      # for th, td
+    "href",       # for a
+    "src",        # for img
+    "alt",        # for img
+    "title",      # for img
+    "height",     # for img
+]
+SAFE_STYLES_REGEXP = [
+    r"margin-bottom:[\d]+px;",
+    r"margin:0 auto;",
+    r"text-align:center;",
+    r"text-align:left;",
+    r"text-align:right;",
+    r"vertical-align:bottom;",
+    r"vertical-align:center;",
+    r"vertical-align:top;",
+    r"width:[\d]+%;",
+]
+cleaner = Cleaner(
+    style=False,
+    allow_tags=ALLOWED_TAGS,
+    safe_attrs_only=True,
+    safe_attrs=SAFE_ATTRS,
+)
 
 MODULO = "OFI PLANTILLAS"
 
@@ -325,6 +359,22 @@ def new():
         destinatarios_emails = str(form.destinatarios_emails.data).strip().replace(" ", "")
         con_copias_emails = str(form.con_copias_emails.data).strip().replace(" ", "")
         remitente_email = str(form.remitente_email.data).strip().replace(" ", "")
+        # Tomar el contenido HTML
+        contenido_html = str(form.contenido_html.data).strip()
+        # Primero limpiarlo de tags y atributos no permitidos
+        contenido_html = cleaner.clean_html(contenido_html)
+        # Luego procesar cada atributo en styles
+        for style in re.findall(r'style="([^"]*)"', contenido_html):
+            # Filtrar solo los estilos permitidos
+            estilos_permitidos = []
+            for style_regexp in SAFE_STYLES_REGEXP:
+                if re.fullmatch(style_regexp, style.strip()):
+                    estilos_permitidos.append(style.strip())
+            # Reemplazar el atributo style por solo los estilos permitidos
+            if estilos_permitidos:
+                contenido_html = contenido_html.replace(f'style="{style}"', f'style="{"; ".join(estilos_permitidos)}"')
+            else:
+                contenido_html = contenido_html.replace(f'style="{style}"', "")
         # Insertar
         ofi_plantilla = OfiPlantilla(
             usuario=propietario,
@@ -333,7 +383,7 @@ def new():
             con_copias_emails=con_copias_emails,
             remitente_email=remitente_email,
             contenido_md=form.contenido_md.data,
-            contenido_html=form.contenido_html.data,
+            contenido_html=contenido_html,
             contenido_sfdt=form.contenido_sfdt.data,
         )
         ofi_plantilla.save()
@@ -378,6 +428,22 @@ def edit(ofi_plantilla_id):
         destinatarios_emails = str(form.destinatarios_emails.data).strip().replace(" ", "")
         con_copias_emails = str(form.con_copias_emails.data).strip().replace(" ", "")
         remitente_email = str(form.remitente_email.data).strip().replace(" ", "")
+        # Tomar el contenido HTML
+        contenido_html = str(form.contenido_html.data).strip()
+        # Primero limpiarlo de tags y atributos no permitidos
+        contenido_html = cleaner.clean_html(contenido_html)
+        # Luego procesar cada atributo en styles
+        for style in re.findall(r'style="([^"]*)"', contenido_html):
+            # Filtrar solo los estilos permitidos
+            estilos_permitidos = []
+            for style_regexp in SAFE_STYLES_REGEXP:
+                if re.fullmatch(style_regexp, style.strip()):
+                    estilos_permitidos.append(style.strip())
+            # Reemplazar el atributo style por solo los estilos permitidos
+            if estilos_permitidos:
+                contenido_html = contenido_html.replace(f'style="{style}"', f'style="{"; ".join(estilos_permitidos)}"')
+            else:
+                contenido_html = contenido_html.replace(f'style="{style}"', "")
         # Si es válido
         if es_valido:
             ofi_plantilla.descripcion = safe_string(form.descripcion.data, save_enie=True)
@@ -386,7 +452,7 @@ def edit(ofi_plantilla_id):
             ofi_plantilla.con_copias_emails = con_copias_emails
             ofi_plantilla.remitente_email = remitente_email
             ofi_plantilla.contenido_md = form.contenido_md.data
-            ofi_plantilla.contenido_html = form.contenido_html.data
+            ofi_plantilla.contenido_html = contenido_html
             ofi_plantilla.contenido_sfdt = form.contenido_sfdt.data
             ofi_plantilla.esta_archivado = form.esta_archivado.data
             ofi_plantilla.esta_compartida = form.esta_compartida.data
