@@ -57,10 +57,6 @@ SAFE_ATTRS = [
     "title",      # for img
     "height",     # for img
 ]
-SAFE_CLASSES = [
-    "table layout-table",
-    "table layout-table ck-table-resized",
-]
 SAFE_STYLES_REGEXP = [
     r"margin-bottom:[\d]+px;",
     r"margin:0 auto;",
